@@ -1,0 +1,4 @@
+any host {{ vcenter_server_ip }} gw 127.0.0.1 dev lo
+any host {{ vcenter_server_ip }} gw {{ eth1_gateway }} dev eth1
+any host {{ vcenter_server_ip }} gw {{ eth0_gateway }} dev eth0
+

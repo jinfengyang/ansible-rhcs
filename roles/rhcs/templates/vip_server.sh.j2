@@ -1,0 +1,36 @@
+#!/bin/bash
+
+LOGFILE="{{cluster_vip_log}}"
+HB_DEVICE1="eth0"
+HB_DEVICE2="eth1"
+GW1="{{eth0_gateway}}"
+GW2="{{eth1_gateway}}"
+CLUSTER_VIP1="{{vip_for_app1}}"
+CLUSTER_VIP2="{{vip_for_app2}}"
+
+RETVAL=0
+if [ $# -ne 1 ]
+then
+    RETVAL=3
+fi
+[ ! -f ${LOGFILE} ] && touch -f ${LOGFILE}
+case "$1" in
+    start)
+        : 
+        ;;
+    stop)
+        :
+        ;;
+    status)
+        /sbin/ip a |grep -w "${CLUSTER_VIP1}" &>/dev/null
+        ret1=$?
+        /sbin/ip a |grep -w "${CLUSTER_VIP2}" &>/dev/null
+        ret2=$?
+        if [ ${ret1} -ne 0 ] && [ ${ret2} -ne 0 ]
+        then
+            echo "`date` ERROR Check the status of the vip addresses<${CLUSTER_VIP1} ${CLUSTER_VIP2}>...     Failed." >>${LOGFILE}
+            RETVAL=1
+        fi
+        ;;
+esac
+exit $RETVAL

@@ -1,0 +1,144 @@
+---
+#
+# Set IP Address
+#
+network_root: /etc/sysconfig/network-scripts
+
+eth0_netmask: 255.255.255.0
+eth0_gateway: 99.12.137.253
+eth0_cidr: 99.12.137.0/24
+
+eth1_netmask: 255.255.255.0
+eth1_gateway: 99.12.138.253
+eth1_cidr: 99.12.138.0/24
+
+eth2_netmask: 255.255.255.0
+eth2_gateway: 99.12.135.253
+eth2_cidr: 99.12.135.0/24
+
+eth3_netmask: 255.255.255.0
+eth3_gateway: 99.12.136.253
+eth3_cidr: 99.12.136.0/24
+
+vip_for_app1: 99.12.135.70
+vip_for_app2: 99.12.136.30
+
+vip_for_app1_sleeptime: 3
+vip_for_app2_sleeptime: 3
+
+dns1: 99.1.34.23
+dns2: 99.1.34.25
+
+vcenter_server_ip: 99.12.131.102
+
+#
+# Set yum repos.
+#
+yum_server_path: http://99.1.14.11/rhel64
+
+#
+# Set Client /etc/hosts
+#
+heartbeat1_master_ip: 99.12.137.109  
+heartbeat1_slaver_ip: 99.12.137.110
+
+heartbeat2_master_ip: 99.12.138.171  
+heartbeat2_slaver_ip: 99.12.138.178
+
+heartbeat1_master_hostname: DBASMY-DB41KF-HB1
+heartbeat1_slaver_hostname: DBASMY-DB42KF-HB1
+
+heartbeat2_master_hostname: DBASMY-DB41KF-HB2
+heartbeat2_slaver_hostname: DBASMY-DB42KF-HB2
+
+#
+# Set heuristic_shell_scripts
+#
+heuristic_shell_scripts: [
+        qdisk_master.sh,
+        qdisk_server.sh,
+        qdisk_vip.sh,
+        vip_server.sh
+]
+
+# 
+# Set qdisk. 
+# 
+dev_name: sdc
+dev_part_name: sdc1
+qdisk_label: mysqlqdisk
+disk_size: 1000M
+
+#
+# Set cluster /etc/cluster/cluster.conf
+#
+config_version: 22
+heartbeat1_master_priority: 1
+heartbeat1_slaver_priority: 3
+
+ricci_password: redhat
+
+cluster_name: mycluster
+cluster_conf: /etc/cluster/cluster.conf
+cluster_fence_name: MySQL-Fence
+cluster_fence_method: vmware_soap
+
+master_vm_name: DBASMY-DB41KF
+master_vm_uuid: "{{hostvars['rhcs1'].ansible_product_uuid}}"
+
+slaver_vm_name: DBASMY-DB42KF
+slaver_vm_uuid: "{{hostvars['rhcs2'].ansible_product_uuid}}"
+
+altmulticast_addr: 224.192.204.10
+quorum_dev_poll: 30000
+
+fence_agent_ipaddr: 99.12.131.102
+fence_agent_login_user: vmrhcs01
+fence_agent_login_password: '@rhcs1215%'
+
+failoverdomain_name: MySQL-Domian
+
+#ha_lvm_data_name: HA-LVM-mysql_data
+#ha_lvm_log_name: HA-LVM-mysql_log
+
+mysql_start_script_path: /etc/rc.d/init.d/mysqld_new
+
+cman_timeout: 30000
+
+cluster_vip_log: /var/log/cluster/vipinfo.log
+
+
+
+# mysql dependencies 
+mysql_dep_list: [
+    expect,
+    iscsi-initiator-utils, 
+    MySQL-python,
+    perl-DBD-MySQL,
+    perl-Time-HiRes,
+    php,
+    php-mysql, 
+    perl-DBD-MySQL,
+    pcre-devel,
+    zlib-devel,
+    openssl-devel,
+    gcc,
+    java-1.7.0-openjdk.x86_64
+]
+
+
+#
+# Set iscsi server target
+#
+target_root: /sys/kernel/config/target
+block_name: tower.disk1
+backend_lv_name: /dev/vg1/lv001 
+iqn_name: iqn.2016-03.com.example:tower
+acl_name_1: iqn.2016-03.com.example:rhcs1
+acl_name_2: iqn.2016-03.com.example:rhcs2
+default_portal_ip: 0.0.0.0
+portal_ip: 99.12.139.2
+portal_port: 3260
+
+# Server for mysql
+mysql_server_name: MySQL-Server

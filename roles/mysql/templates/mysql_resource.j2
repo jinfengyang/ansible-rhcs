@@ -1,0 +1,25 @@
+		<resources>
+			<ip address="{{vip_for_app1}}" sleeptime="{{vip_for_app1_sleeptime}}">
+				<action depth="*" interval="10" name="status" timeout="10"/>
+			</ip>
+			<ip address="{{vip_for_app2}}" sleeptime="{{vip_for_app2_sleeptime}}">
+				<action depth="*" interval="10" name="status" timeout="10"/>
+			</ip>
+			<lvm lv_name="lv_mysql_data" name="HA-LVM-mysql_data" self_fence="1" vg_name="vg_mysql_data"/>
+			<lvm lv_name="lv_mysql_log" name="HA-LVM-mysql_log" self_fence="1" vg_name="vg_mysql_log"/>
+			<fs device="/dev/mapper/vg_mysql_data-lv_mysql_data" force_unmount="1" fsid="13569" fstype="ext4" mountpoint="/data/dbaas/mysql" name="fs_mysql_data" options="acl" self_fence="1">
+				<action depth="*" interval="10" name="status" timeout="10"/>
+			</fs>
+			<fs device="/dev/mapper/vg_mysql_log-lv_mysql_log" force_unmount="1" fsid="10821" fstype="ext4" mountpoint="/data/dbaas/mysql/binlog_w" name="fs_mysql_log" options="acl" self_fence="1">
+				<action depth="*" interval="10" name="status" timeout="10"/>
+			</fs>
+			<script file="/etc/rc.d/init.d/mysqld_new" name="mysql_server">
+				<action interval="10" name="status"/>
+			</script>
+			<script file="/opt/cluster/vip_server.sh" name="vip_server">
+				<action interval="10" name="status" timeout="10"/>
+			</script>
+			<script file="/etc/rc.d/init.d/zabbix_agent" name="zabbix_agent">
+				<action interval="10" name="status"/>
+			</script>
+		</resources>

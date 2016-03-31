@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+
+def insert_file(module, src, dest, keystr):
+    fileadd = open(src)
+    contentadd = fileadd.read()
+    file = open(dest) 
+    content = file.read()
+    file.close()
+    fileadd.close()
+    pos = content.find(keystr)
+
+    if contentadd in content: return False
+
+    if pos != -1:
+        content = content[:pos]	+ contentadd + content[pos:]
+        file = open(dest, 'w')
+        file.write( content )
+        file.close
+    return True
+
+def main():
+    module = AnsibleModule(
+        argument_spec=dict(
+            src=dict(required=True),
+            dest=dict(required=True),
+            keystr=dict(required=True)
+        ),
+        supports_check_mode=True
+    )
+    if module.check_mode:
+        module.exit_json(changed=False)
+
+    src = module.params['src']
+    dest = module.params['dest']
+    keystr = module.params['keystr']
+    module.exit_json(changed=insert_file(module,src,dest,keystr))
+    
+    #if insert_file(module, src, dest, keystr):
+    #    module.exit_json(changed=)
+    #else:
+    #    msg = "Could not insert %s to %s." % (src, dest)
+    #    module.fail_json(msg=msg)
+
+from ansible.module_utils.basic import *
+main()
+  

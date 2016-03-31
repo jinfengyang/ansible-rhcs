@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+def read_file(module, file_path):
+    #cat_path = module.get_bin_path('cat', required=True)
+    #args = [cat_path, file_path]
+    #(rc, stdout, stderr) = module.run_command(args)
+    f = open(file_path)
+    return f.read()
+
+def main():
+    module = AnsibleModule(
+        argument_spec=dict(
+            file_path=dict(required=True)
+        ),
+        supports_check_mode=True
+    )
+    if module.check_mode:
+        module.exit_json(changed=False)
+    file_path = module.params['file_path']
+    lines = read_file(module, file_path)
+    if lines:
+        module.exit_json(changed=False, lines=lines)
+    else:
+        msg = "Could not read %s" % (file_path,)
+
+from ansible.module_utils.basic import *
+main()
+

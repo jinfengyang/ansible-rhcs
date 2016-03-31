@@ -1,0 +1,23 @@
+#!/bin/bash
+
+VCENTER="{{vcenter_server_ip}}"
+HB_DEVICE1="eth0"
+HB_DEVICE2="eth1"
+GW1="{{eth0_gateway}}"
+GW2="{{eth1_gateway}}"
+MASTER_HB1="heartbeat1_master_hostname"
+
+/bin/ping -c1 -w1 ${GW1} &> /dev/null
+A=$?
+/bin/ping -c1 -w1 ${GW2} &> /dev/null
+B=$?
+if [ ${A} -ne 0 -a ${B} -ne 0 ];then
+	NODE=`/usr/sbin/clustat | grep service: |awk '{print $2}'`
+	if [ "${NODE}" = "${MASTER_HB1}" ];then
+		exit 0
+	else
+		exit 1
+	fi
+else
+	exit 0
+fi

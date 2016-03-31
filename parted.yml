@@ -1,0 +1,13 @@
+#- name: mklabel 
+#  shell: parted -s /dev/sdb mklabel msdos 
+
+#- name: mkpart
+#  shell: parted -s /dev/sdb mkparted primary 0 1G
+
+- name: New Disk Format(ext4)
+  filesystem: fstype=ext4 dev="{{ partition }}" opts="-cc"
+  become: yes
+  become_method: su
+  
+ 
+  

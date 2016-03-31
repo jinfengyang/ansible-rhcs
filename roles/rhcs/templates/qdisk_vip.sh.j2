@@ -1,0 +1,25 @@
+#!/bin/bash
+
+VCENTER="{{vcenter_server_ip}}"
+HB_DEVICE1="eth0"
+HB_DEVICE2="eth1"
+GW1="{{eth0_gateway}}"
+GW2="{{eth1_gateway}}"
+CLUSTER_VIP1="{{vip_for_app1}}"
+CLUSTER_VIP2="{{vip_for_app2}}"
+
+/bin/ping -c1 -w1 ${GW1} &> /dev/null
+A=$?
+/bin/ping -c1 -w1 ${GW2} &> /dev/null
+B=$?
+
+if [ ${A} -ne 0 -a ${B} -ne 0 ];then
+	/sbin/ip a | grep "${CLUSTER_VIP1}|${CLUSTER_VIP2}"
+	if [ $? -ne 0 ];then
+		exit 0
+	else
+		exit 1
+	fi
+else
+	exit 0
+fi

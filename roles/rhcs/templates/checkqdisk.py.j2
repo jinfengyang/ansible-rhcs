@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+import commands
+qdisklabel="{{qdisk_label}}"
+disk="{{dev_part_name}}"
+
+(_,ret) = commands.getstatusoutput("mkqdisk -L")
+if qdisklabel not in ret:
+    commands.getstatusoutput(
+        "echo y | mkqdisk -c /dev/%s -l %s"%(disk, qdisklabel)
+    )
+

@@ -1,0 +1,3 @@
+- name: partx device
+  command: partx -a /dev/{{dev_name}}
+

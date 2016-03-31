@@ -1,0 +1,65 @@
+- name: Ensure target rpm is installed.
+  yum: name=targetcli state=installed
+
+- name: Ensure target service is started.
+  service: name=target state=started enabled=yes
+
+- name: Check target backstore.
+  stat: path={{target_root}}/core/iblock_0/{{block_name}}
+  register: block
+
+- name: Create target backstore.
+  command: targetcli backstores/block create {{block_name}} {{backend_lv_name}}
+  when: block.stat.exists == False
+
+- name: Check target iqn.
+  stat: path={{target_root}}/iscsi/{{iqn_name}}
+  register: iqn
+
+- name: Create target iqn.
+  command: targetcli iscsi/ create {{iqn_name}}
+  when: iqn.stat.exists == False
+
+- name: Check default portal.
+  stat: path={{target_root}}/iscsi/{{iqn_name}}/tpgt_1/np/{{default_portal_ip}}:{{portal_port}}
+  register: default_portal
+
+- name: Delete default portal.
+  command: targetcli iscsi/{{iqn_name}}/tpg1/portals/ delete {{default_portal_ip}} {{portal_port}}
+  when: default_portal.stat.exists == True
+  
+- name: Check target portal.
+  stat: path={{target_root}}/iscsi/{{iqn_name}}/tpgt_1/np/{{portal_ip}}:{{portal_port}}
+  register: portal
+ 
+- name: Create target portal.
+  command: targetcli iscsi/{{iqn_name}}/tpg1/portals/ create {{portal_ip}} {{portal_port}}
+  when: portal.stat.exists == False
+
+- name: Check target lun for {{block_name}}
+  stat: path={{target_root}}/core/iblock_0/{{block_name}}/statistics/scsi_lu/lun
+  register: block_lun
+- command: cat {{block_lun.stat.path}}
+  register: block_lun_num
+
+- stat: path={{target_root}}/iscsi/{{iqn_name}}/tpgt_1/lun/lun_{{block_lun_num.stdout}}
+  register: lun
+
+- name: Create target luns for {{block_name}}.
+  command: targetcli iscsi/{{iqn_name}}/tpg1/luns/ create /backstores/block/{{block_name}} 
+  when: lun.stat.exists == False
+  
+- name: Check taget acls.
+  stat: path={{target_root}}/iscsi/{{iqn_name}}/tpgt_1/acls/{{acl_name_1}}
+  register: acl1
+- stat: path={{target_root}}/iscsi/{{iqn_name}}/tpgt_1/acls/{{acl_name_2}}
+  register: acl2
+
+- name: Create target acls.
+  command: targetcli iscsi/{{iqn_name}}/tpg1/acls/ create {{acl_name_1}}  
+  when: acl1.stat.exists == False
+
+- name: Create target acls.
+  command: targetcli iscsi/{{iqn_name}}/tpg1/acls/ create {{acl_name_2}}  
+  when: acl2.stat.exists == False
+

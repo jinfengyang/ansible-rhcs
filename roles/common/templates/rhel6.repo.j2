@@ -1,0 +1,22 @@
+[rhel6.4]
+name=Red Hat Enterprise Linux 64
+baseurl={{ yum_server_path }}/Server
+enabled=1
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+[rhel6.4-fix]
+name=Red Hat Enterprise Linux 64
+baseurl={{ yum_server_path }}/fix
+enabled=1
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+[rhel6.4-HA]                       
+name=Red Hat Enterprise Linux 64
+baseurl={{ yum_server_path }}/HighAvailability
+enabled=1
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+

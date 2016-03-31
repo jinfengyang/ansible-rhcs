@@ -1,0 +1,38 @@
+#!/bin/bash
+#
+VCENTER={{ vcenter_server_ip }}
+HB_DEVICE1=eth0
+HB_DEVICE2=eth1
+GW1={{ eth0_gateway }}
+GW2={{ eth1_gateway }}
+while true
+do
+/bin/ping -c2 -w2 $GW1 -I $HB_DEVICE1 &> /dev/null
+if [ $? -eq 0 ];then
+	/sbin/ip route |grep ^$VCENTER |head -n 1 |grep $GW1 |grep $HB_DEVICE1 &> /dev/null
+	if [ $? -ne 0 ];then
+		/sbin/ip route |grep ^$VCENTER |grep $GW1 |grep $HB_DEVICE1 &> /dev/null
+		if [ $? -ne 0 ];then
+			/sbin/route add -host $VCENTER gw $GW1 dev $HB_DEVICE1
+		else
+			/sbin/route del -host $VCENTER gw $GW1 dev $HB_DEVICE1
+			/sbin/route add -host $VCENTER gw $GW1 dev $HB_DEVICE1
+		fi
+	fi
+else
+	/bin/ping -c2 -w2 $GW2 -I $HB_DEVICE2 &> /dev/null
+	if [ $? -eq 0 ];then
+		/sbin/ip route |grep ^$VCENTER |head -n 1 |grep $GW2 |grep $HB_DEVICE2 &> /dev/null
+		if [ $? -ne 0 ];then
+			/sbin/ip route |grep ^$VCENTER |grep $GW2 |grep $HB_DEVICE2 &> /dev/null
+			if [ $? -ne 0 ];then
+				/sbin/route add -host $VCENTER gw $GW2 dev $HB_DEVICE2
+			else
+				/sbin/route del -host $VCENTER gw $GW2 dev $HB_DEVICE2
+				/sbin/route add -host $VCENTER gw $GW2 dev $HB_DEVICE2
+			fi
+		fi
+	fi
+fi
+sleep 5
+done

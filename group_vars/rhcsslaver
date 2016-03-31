@@ -1,0 +1,15 @@
+--- 
+# Set IP Address.
+eth0_ip: 99.12.137.110
+eth1_ip: 99.12.138.178
+eth2_ip: 99.12.135.7
+eth3_ip: 99.12.136.29
+
+# Create qdisk.
+createqdisk: False
+
+# Set iscsi server.
+acl_name: "{{acl_name_2}}"
+
+# Set HA-LVM /etc/lvm/lvm.conf
+hb_name: "{{heartbeat1_slaver_hostname}}"

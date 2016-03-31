@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+import commands
+hbname="@{{hb_name}}"
+cmd="pvs|awk '{print$1,$2}'"
+(_,ret) = commands.getstatusoutput(cmd)
+vgs1 = ret.split("\n")[1:]
+vgs = []
+for i in vgs1:
+    #vgs_dict.setdefault(i.split()[1], []).append(i.split()[0])
+    val,key= i.split()
+    cmd1 = "ls  -l /dev/disk/by-id |grep scsi"
+    (_,ret) = commands.getstatusoutput(cmd1)
+    if val.split("/")[-1] not in ret:
+        vgs.append(key)
+
+vgs = list(set(vgs))
+vgs.append(hbname)
+
+print vgs

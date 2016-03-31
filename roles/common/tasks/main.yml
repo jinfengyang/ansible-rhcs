@@ -1,0 +1,38 @@
+- name: In the Common role.
+  debug: msg="in the common role"
+
+- name: Check NetworkManger
+  stat: path=/etc/init.d/NetworkManager
+  register: nm_stat
+  
+- name: Ensure NetworkManager service is stopped 
+  service: name=NetworkManager state=stopped enabled=no
+  when: nm_stat.stat.exists == True
+
+- name: Ensure iptables is stopped.
+  service: name=iptables state=stopped enabled=no
+
+- name: Ensure libselinux-python is installed.
+  yum: name=libselinux-python state=installed
+   
+- name: Ensure selinux is disabled.
+  selinux: state=disabled
+
+- name: Ensure yum repos server is enabled.
+  template: src=rhel6.repo.j2 dest=/etc/yum.repos.d/rhel6.repo
+
+- name: Ensure heatbeat hostname in /etc/hosts.
+  lineinfile: dest=/etc/hosts state=present line='{{item}}'
+  with_items:
+      - "#First heartbeat"
+      - "{{heartbeat1_master_ip}} {{heartbeat1_master_hostname}}"
+      - "{{heartbeat1_slaver_ip}} {{heartbeat1_slaver_hostname}}"
+      - "#Second heartbeat"
+      - "{{heartbeat2_master_ip}} {{heartbeat2_master_hostname}}"
+      - "{{heartbeat2_slaver_ip}} {{heartbeat2_slaver_hostname}}"
+           
+- name: Install omping rpm for Multicast Test.
+  yum: name=omping state=installed
+      
+  
+

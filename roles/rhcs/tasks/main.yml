@@ -1,0 +1,147 @@
+- name: In the RHCS Role.
+  debug: msg="In the RHCS Role."
+
+- name: Install ricci rpm.
+  yum: name=ricci state=installed
+
+- name: Set ricci user password.
+  user: name=ricci password={{ricci_password}}
+
+- name: Ensure ricci service started.
+  service: name=ricci state=started enabled=yes
+
+#- name: Install luci rpm.
+#  yum: name=luci state=installed
+
+#- name: Ensure luci service started.
+#  service: name=luci state=started
+
+- name: Install CCS command rpm.
+  yum: name=ccs state=installed
+
+#- name: Ensure /etc/cluster/ directory is exists.
+#  file: dest=/etc/cluster state=directory
+
+- name: Create cluster.
+  template: src=cluster.conf.j2 dest=/etc/cluster/cluster.conf
+  tags: cluster
+
+- name: Ensure heuristic shell scripts is ready.
+  template: src={{item}}.j2 dest=/opt/cluster/{{item}} mode=755
+  with_items:
+    - "{{heuristic_shell_scripts}}"
+
+- name: Install cman.
+  yum: name=cman state=installed
+    
+- name: Install rgmanager.
+  yum: name=rgmanager state=installed
+
+#- name: Ensure rgmanager is running.
+#  service: name=rgmanager state=started
+
+#- name: Ensure iscsi is installed.
+#  yum: name=iscsi-initiator-utils state=installed
+
+#- name: Ensure initiatorname.iscsi is exists.
+#  template: 
+#      src=initiatorname.iscsi.j2
+#      dest=/etc/iscsi/initiatorname.iscsi
+
+- name: Check device is exists.
+  stat: path=/dev/{{dev_name}}
+  register: dev_stat
+
+#- name: Discover and login targets on given portal.
+#  open_iscsi: 
+#      portal={{portal_ip}} 
+#      port={{portal_port}}
+#      target={{iqn_name}}
+#      login=yes 
+#      discover=yes
+#  when: dev_stat.stat.exists == False
+
+- name: Check device part is exists.
+  stat: path=/dev/{{dev_part_name}}
+  register: dev_part_stat
+  when: dev_stat.stat.exists == True 
+
+- name: Create device part --> mklabel.
+  command: parted -s /dev/{{dev_name}} mklabel msdos 
+  when: dev_part_stat.stat.exists == False and {{createqdisk}} == True
+
+- name: Create device part --> mkpart. 
+  command: parted -s /dev/{{dev_name}} mkpart primary 0 {{disk_size}}
+  when: dev_part_stat.stat.exists == False and {{createqdisk}} == True
+
+- name: partx device.
+  command: partx -a /dev/{{dev_name}}
+  
+- name: Copy checkqdisk script.
+  template: src=checkqdisk.py.j2 dest=/opt/checkqdisk.py mode=755
+
+- name: Create qdisk.
+  command: python /opt/checkqdisk.py
+  when: dev_part_stat.stat.exists == True and {{createqdisk}} == True 
+  
+- name: Set cluster services.
+  service: name=ricci enabled=yes
+- service: name=cman enabled=no
+- service: name=rgmanager enabled=no
+
+- name: Set rc.local
+  lineinfile: dest=/etc/rc.local state=present line='{{item}}'
+  with_items:
+    - "sleep 10"
+    - "/etc/init.d/cman start && /etc/init.d/rgmanager start"
+
+- name: Scan vgs.
+  template: src=vgscan.py.j2 dest=/opt/vgscan.py
+- shell: python /opt/vgscan.py
+  register: vg_list
+
+- name: Set HA-LVM.
+  lineinfile: 
+      dest=/etc/lvm/lvm.conf
+      state=present
+      regexp='^volume_list'  
+      insertafter="# volume_list"
+      line="volume_list={{vg_list.stdout}}"
+
+- name: Get uname.
+  command: uname -r
+  register: version
+
+- name: Check initramfs backup.
+  stat: path=/boot/initramfs-{{version.stdout}}.img.bak
+  register: ram_bak
+
+- name: Check initramfs file.
+  stat: path=/boot/initramfs-{{version.stdout}}.img
+  register: ram
+
+- name: Create initramfs backup 
+  command: mv /boot/initramfs-{{version.stdout}}.img /boot/initramfs-{{version.stdout}}.img.bak
+  when: ram_bak.stat.exists == False and ram.stat.exists == True
+
+- name: Create new initramfs.
+  command: dracut -H -f /boot/initramfs-{{version.stdout}}.img {{version.stdout}}
+  when: ram.stat.exists == False 
+
+- name: Please reboot hosts.
+  debug: msg="Please reboot hosts manually"
+  
+- name: Ensure cman service started.
+  service: name=cman state=started enabled=no
+
+- name: Gain Second multicast
+  shell: cman_tool status| grep Multicast |awk -F '[. ]' '{print $4"."$5"."$6}'
+  register: sec_multicast
+
+- name: Set Second multicast
+  shell: sed -i "/altmulticast/s/\".*\"/\"224\.{{sec_multicast.stdout}}\"/g" /etc/cluster/cluster.conf
+  when: sec_multicast != ""
+
+- name: Restart cman service started.
+  service: name=cman state=restarted enabled=no
+

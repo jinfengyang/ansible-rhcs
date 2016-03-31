@@ -1,0 +1,9 @@
+[rhcsmaster]
+rhcs1 ansible_ssh_host=99.12.139.54
+
+[rhcsslaver]
+rhcs2 ansible_ssh_host=99.12.139.53
+
+
+
+

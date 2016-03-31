@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<cluster config_version="{{config_version}}" name="{{cluster_name}}">
+	<clusternodes>
+		<clusternode name="{{heartbeat1_master_hostname}}" nodeid="1">
+			<altname name="{{heartbeat2_master_hostname}}"/>
+			<fence>
+				<method name="{{cluster_fence_method}}">
+					<device name="{{cluster_fence_name}}" port="{{master_vm_name}}" ssl="on" uuid="{{master_vm_uuid}}"/>
+				</method>
+			</fence>
+		</clusternode>
+		<clusternode name="{{heartbeat1_slaver_hostname}}" nodeid="2">
+			<altname name="{{heartbeat2_slaver_hostname}}"/>
+			<fence>
+				<method name="{{cluster_fence_method}}">
+					<device name="{{cluster_fence_name}}" port="{{slaver_vm_name}}" ssl="on" uuid="{{slaver_vm_uuid}}"/>
+				</method>
+			</fence>
+		</clusternode>
+	</clusternodes>
+	<cman expected_votes="3" quorum_dev_poll="{{quorum_dev_poll}}">
+		<altmulticast addr="{{altmulticast_addr}}"/>
+	</cman>
+	<fencedevices>
+		<fencedevice agent="fence_vmware_soap" ipaddr="{{fence_agent_ipaddr}}" login="{{fence_agent_login_user}}" name="{{cluster_fence_name}}" passwd="{{fence_agent_login_password}}"/>
+	</fencedevices>
+	<rm>
+		<failoverdomains>
+			<failoverdomain name="{{failoverdomain_name}}" nofailback="1" ordered="1">
+				<failoverdomainnode name="{{heartbeat1_master_hostname}}" priority="{{heartbeat1_master_priority}}"/>
+				<failoverdomainnode name="{{heartbeat1_slaver_hostname}}" priority="{{heartbeat1_slaver_priority}}"/>
+			</failoverdomain>
+		</failoverdomains>
+	</rm>
+	<quorumd label="mysqlqdisk" min_score="2">
+		<heuristic interval="3" program="/bin/sh /opt/cluster/qdisk_master.sh" score="2" tko="4"/>
+		<heuristic interval="3" program="/bin/sh /opt/cluster/qdisk_vip.sh" tko="4"/>
+		<heuristic interval="3" program="/bin/sh /opt/cluster/qdisk_server.sh" tko="4"/>
+	</quorumd>
+	<totem token="{{cman_timeout}}"/>
+</cluster>

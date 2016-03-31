@@ -1,0 +1,47 @@
+---
+- name: Set IP Address.
+  template: 
+      src=ifcfg-{{ item }}.j2
+      dest={{ network_root }}/ifcfg-{{ item }}
+  with_items: 
+    - eth0
+    - eth1
+    - eth2
+    - eth3
+  notify: restart network 
+
+- name: Create route tables.
+  template: 
+      src=route-{{ item }}.j2
+      dest={{ network_root }}/route-{{ item }}
+  with_items: 
+    - eth2
+    - eth3
+  notify: restart network 
+
+- name: Create rule tables.
+  template: 
+      src=rule-{{ item }}.j2
+      dest={{ network_root }}/rule-{{ item }}
+  with_items: 
+    - eth2
+    - eth3
+  notify: restart network 
+
+- name: Create heartbeat route.
+  template:
+      src=static-routes.j2
+      dest=/etc/sysconfig/static-routes
+  notify: restart network 
+
+- name: Ensure /opt/cluster directory is exists.
+  file: dest=/opt/cluster state=directory
+
+- name: Create heartbeat route monitor shell script.
+  template: src=route.sh.j2 dest=/opt/cluster/route.sh
+
+- name: Check heartbeat route monitor shell script.
+  cron:
+      name='check route'
+      job='/bin/ps aux |grep /opt/cluster/route.sh |grep -v grep &> /dev/null || /bin/sh /opt/cluster/route.sh &'
+

@@ -1,0 +1,82 @@
+- name: In the Mysql Role.
+  debug: msg="In the Mysql Role."
+
+- name: Set sysctl.conf remove net.bridge.bridge-nf-call-ip6tables/iptables/arptables
+  lineinfile:
+      dest=/etc/sysctl.conf
+      state=absent
+      line='{{item}}'
+  with_items:
+      - "net.bridge.bridge-nf-call-ip6tables = 0"
+      - "net.bridge.bridge-nf-call-iptables = 0"
+      - "net.bridge.bridge-nf-call-arptables = 0"
+  notify: restart sysctl
+
+- name: Set sysctl.conf for MySQL.
+  lineinfile: 
+      dest=/etc/sysctl.conf
+      state=present
+      line='{{item}}'
+  with_items:
+      - "vm.swappiness = 8"
+      - "net.core.somaxconn = 2048"
+      - "net.core.netdev_max_backlog = 2048"
+      - "net.ipv4.tcp_tw_recycle = 1"
+      - "net.ipv4.tcp_tw_reuse = 1"
+      - "fs.aio-max-nr = 655360"
+      - "net.core.rmem_default = 262144"
+      - "net.core.rmem_max = 4194304"
+      - "net.core.wmem_default = 262144"
+      - "net.core.wmem_max = 1048576"
+  notify: restart sysctl
+
+- name: Install MySQL dependecies rpms.
+  yum: 
+      name={{item}}
+      state=installed
+  #debug: msg={{item}}
+  with_items:
+      - "{{mysql_dep_list}}"
+
+- name: Copy mysql resource file.
+  template: src=mysql_resource.j2 dest=/tmp/mysql_resource mode=755
+  tags: mysql_test
+
+- name: Ensure mysql_resource_file.
+  stat: path=/tmp/mysql_resource
+  register: mysql_resource_stat
+  tags: mysql_test
+  
+- debug: var=mysql_resource_stat
+  tags: mysql_test
+
+- name: Insert mysql resource file into cluster.conf.
+  insert_file: src=/tmp/mysql_resource dest=/etc/cluster/cluster.conf keystr="</rm>"
+  when: mysql_resource_stat.stat.exists == True
+  tags: mysql_test
+    
+- name: Copy mysql server file.
+  template: src=mysql_server.j2 dest=/tmp/mysql_server mode=755
+  tags: mysql_test
+
+- name: Ensure mysql_server_file.
+  stat: path=/tmp/mysql_server
+  register: mysql_server_stat
+  tags: mysql_test
+  
+- name: Insert mysql server file into cluster.conf.
+  insert_file: src=/tmp/mysql_server dest=/etc/cluster/cluster.conf keystr="</rm>"
+  when: mysql_server_stat.stat.exists == True
+  tags: mysql_test
+
+- name: Ensure rgmanager service stopped.
+  service: name=rgmanager state=stopped enabled=no
+
+- name: Ensurr cman service stoppped.
+  service: name=cman state=stopped enabled=no
+
+#- name: Ensure rgmanager service started.
+#  service: name=rgmanager state=started enabled=no
+
+- name: Reboot the system.
+  command: reboot

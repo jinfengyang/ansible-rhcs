@@ -1,0 +1,9 @@
+---
+- name: Create iscsi luns for qdisk.
+  hosts: iscsiserver
+  remote_user: root
+
+  roles:
+    - iscsi
+  
+  

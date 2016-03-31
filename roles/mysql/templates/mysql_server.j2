@@ -1,0 +1,12 @@
+		<service domain="{{failoverdomain_name}}" name="{{mysql_server_name}}" recovery="relocate">
+			<ip __independent_subtree="2" ref="{{vip_for_app1}}"/>
+			<ip __independent_subtree="2" ref="{{vip_for_app2}}"/>
+			<lvm ref="HA-LVM-mysql_data">
+				<fs ref="fs_mysql_data"/>
+			</lvm>
+			<lvm ref="HA-LVM-mysql_log">
+				<fs ref="fs_mysql_log"/>
+			</lvm>
+			<script ref="vip_server"/>
+			<script ref="mysql_server"/>
+		</service>

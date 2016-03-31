@@ -1,0 +1,38 @@
+---
+# This playbook deploys the whole application stack in this site.
+
+- name: setup ip address for hosts.
+  hosts: all
+  remote_user: root
+  tags: ipaddress
+  roles:
+    - ipaddress
+
+- name: apply common configuration to all nodes
+  hosts: all
+  remote_user: root
+  tags: common
+  roles:
+    - common
+
+- name: configure and deploy the rhcs and application code
+  hosts: all
+  remote_user: root
+  gather_facts: true
+  tags: rhcs
+  roles:
+    - rhcs
+
+- name: configure and deploy the mysql and application code
+  hosts: all
+  tags: mysql
+  remote_user: root
+  roles:
+    - mysql
+
+#- name: configure and deploy zabbix agent 
+#  hosts: all
+#  remote_user: root
+ 
+#  roles:
+#    - zabbix
